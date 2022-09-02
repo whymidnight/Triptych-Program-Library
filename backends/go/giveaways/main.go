@@ -7,6 +7,7 @@ import (
 	"os"
 
 	. "github.com/kkdai/twitter"
+	"triptych.labs/utils"
 )
 
 var ConsumerKey string
@@ -19,10 +20,11 @@ func init() {
 }
 
 const (
-	CallbackURL string = "http://YOURDOMAIN.com/maketoken"
+	CallbackURL string = "http://triptychlabs.io/maketoken"
 )
 
 func main() {
+	fmt.Println("RPC:", utils.NETWORK)
 
 	if ConsumerKey == "" && ConsumerSecret == "" {
 		fmt.Println("Please setup ConsumerKey and ConsumerSecret.")
@@ -108,3 +110,4 @@ func GetUserDetail(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Follower Detail of =", followers)
 	fmt.Fprintf(w, "The item is: "+string(bits))
 }
+
