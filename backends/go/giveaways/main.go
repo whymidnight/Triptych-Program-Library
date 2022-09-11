@@ -4,29 +4,22 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
-	"os"
 
-	. "github.com/kkdai/twitter"
+	"triptych.labs/twitter/v2/constants"
+	"triptych.labs/twitter/v2/state"
 	"triptych.labs/utils"
 )
 
-var ConsumerKey string
-var ConsumerSecret string
-var twitterClient *ServerClient
-
 func init() {
-	ConsumerKey = os.Getenv("ConsumerKey")
-	ConsumerSecret = os.Getenv("ConsumerSecret")
+	constants.Init()
+	state.Init()
 }
 
-const (
-	CallbackURL string = "http://triptychlabs.io/maketoken"
-)
-
 func main() {
+
 	fmt.Println("RPC:", utils.NETWORK)
 
-	if ConsumerKey == "" && ConsumerSecret == "" {
+	if constants.ConsumerKey == "" && constants.ConsumerSecret == "" {
 		fmt.Println("Please setup ConsumerKey and ConsumerSecret.")
 		return
 	}
@@ -38,76 +31,9 @@ func main() {
 
 	flag.Parse()
 
-	fmt.Println("[app] Init server key=", ConsumerKey, " secret=", ConsumerSecret)
-	twitterClient = NewServerClient(ConsumerKey, ConsumerSecret)
-	http.HandleFunc("/maketoken", GetTwitterToken)
-	http.HandleFunc("/request", RedirectUserToTwitter)
-	http.HandleFunc("/follow", GetFollower)
-	http.HandleFunc("/followids", GetFollowerIDs)
-	http.HandleFunc("/time", GetTimeLine)
-	http.HandleFunc("/user", GetUserDetail)
-	http.HandleFunc("/", MainProcess)
-
 	u := fmt.Sprintf(":%d", *port)
 	fmt.Printf("Listening on '%s'\n", u)
 	http.ListenAndServe(u, nil)
 }
 
-func MainProcess(w http.ResponseWriter, r *http.Request) {
-
-	if !twitterClient.HasAuth() {
-		fmt.Fprintf(w, "<BODY><CENTER><A HREF='/request'><IMG SRC='https://g.twimg.com/dev/sites/default/files/images_documentation/sign-in-with-twitter-gray.png'></A></CENTER></BODY>")
-		return
-	} else {
-		//Logon, redirect to display time line
-		timelineURL := fmt.Sprintf("http://%s/time", r.Host)
-		http.Redirect(w, r, timelineURL, http.StatusTemporaryRedirect)
-	}
-}
-
-func RedirectUserToTwitter(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Enter redirect to twitter")
-	fmt.Println("Token URL=", CallbackURL)
-
-	// TODO THIS IS REALLY BAD lol
-	requestUrl, _ := twitterClient.GetAuthURL(CallbackURL)
-
-	http.Redirect(w, r, requestUrl, http.StatusTemporaryRedirect)
-	fmt.Println("Leave redirtect")
-}
-
-func GetTimeLine(w http.ResponseWriter, r *http.Request) {
-	timeline, bits, _ := twitterClient.QueryTimeLine(1)
-	fmt.Println("TimeLine=", timeline)
-	fmt.Fprintf(w, "The item is: "+string(bits))
-
-}
-func GetTwitterToken(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Enter Get twitter token")
-	values := r.URL.Query()
-	verificationCode := values.Get("oauth_verifier")
-	tokenKey := values.Get("oauth_token")
-
-	twitterClient.CompleteAuth(tokenKey, verificationCode)
-	timelineURL := fmt.Sprintf("http://%s/time", r.Host)
-
-	http.Redirect(w, r, timelineURL, http.StatusTemporaryRedirect)
-}
-
-func GetFollower(w http.ResponseWriter, r *http.Request) {
-	followers, bits, _ := twitterClient.QueryFollower(10)
-	fmt.Println("Followers=", followers)
-	fmt.Fprintf(w, "The item is: "+string(bits))
-}
-
-func GetFollowerIDs(w http.ResponseWriter, r *http.Request) {
-	followers, bits, _ := twitterClient.QueryFollowerIDs(10)
-	fmt.Println("Follower IDs=", followers)
-	fmt.Fprintf(w, "The item is: "+string(bits))
-}
-func GetUserDetail(w http.ResponseWriter, r *http.Request) {
-	followers, bits, _ := twitterClient.QueryFollowerById(2244994945)
-	fmt.Println("Follower Detail of =", followers)
-	fmt.Fprintf(w, "The item is: "+string(bits))
-}
 
