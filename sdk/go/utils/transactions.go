@@ -71,3 +71,43 @@ func SendTx(
 	wsClient.Close()
 	log.Println(sig)
 }
+
+func PrepareTransaction(
+	rpcClient *rpc.Client,
+	instructions []solana.Instruction,
+) *solana.Transaction {
+	recent, err := rpcClient.GetRecentBlockhash(context.TODO(), rpc.CommitmentFinalized)
+	if err != nil {
+		log.Println("PANIC!!!", fmt.Errorf("unable to fetch recent blockhash - %w", err))
+		return nil
+	}
+
+	tx, err := solana.NewTransaction(
+		instructions,
+		recent.Value.Blockhash,
+	)
+	if err != nil {
+		log.Println("PANIC!!!", fmt.Errorf("unable to create transaction"))
+		return nil
+	}
+
+	return tx
+}
+
+/*
+func signTransaction(signers []solana.PrivateKey) {
+	_, err = tx.Sign(func(key solana.PublicKey) *solana.PrivateKey {
+		for _, candidate := range signers {
+			if candidate.PublicKey().Equals(key) {
+				return &candidate
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		log.Println("PANIC!!!", fmt.Errorf("unable to sign transaction: %w", err))
+		return nil
+	}
+  return
+}
+*/

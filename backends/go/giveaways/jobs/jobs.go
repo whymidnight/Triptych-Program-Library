@@ -2,12 +2,12 @@ package jobs
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"sync"
 	"time"
 
 	"github.com/didil/goblero/pkg/blero"
+	"triptych.labs/giveaways/v2/database"
 	twitterActions "triptych.labs/twitter/v2/actions"
 )
 
@@ -48,9 +48,10 @@ func Init() {
 				log.Printf("[Processor %v] Processing job: %v - data: %v\n", pI, j.Name, string(j.Data))
 
 				kpis := twitterActions.GetTweet(job.TweetId)
+				giveaway := database.FindRecord(job.TweetId)
 
-				js, _ := json.MarshalIndent(kpis, "", "  ")
-				fmt.Println(string(js))
+				giveaway.Participants = int64(kpis.NumberOfProfiles)
+				giveaway.UpdateRecord()
 
 				log.Printf("[Processor %v] Done Processing job: %v\n", pI, j.Name)
 

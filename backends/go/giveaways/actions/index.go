@@ -30,22 +30,42 @@ func Handle(httpRequest *http.Request) (body interface{}, statusCode int) {
 	case "overview":
 		{
 
-			authResponse, debug := Overview(message, r.Body)
-			if authResponse == nil {
+			response, debug := Overview(message, r.Body)
+			if response == nil {
 				return debug, 400
 			}
 
-			return authResponse, http.StatusOK
+			return response, http.StatusOK
 		}
 	case "create":
 		{
 
-			authResponse, debug := Create(message, r.Body)
-			if authResponse == nil {
+			response, debug := Create(message, r.Body)
+			if response == nil {
 				return debug, 400
 			}
 
-			return authResponse, http.StatusOK
+			return response, http.StatusOK
+		}
+	case "rollInvoke":
+		{
+
+			response, debug := RollInvoke(message, r.Body)
+			if response == nil {
+				return debug, 400
+			}
+
+			return response, http.StatusOK
+		}
+	case "rollStart":
+		{
+
+			response, debug := RollStart(message, r.Body)
+			if response == nil {
+				return debug, 400
+			}
+
+			return response, http.StatusOK
 		}
 	}
 
@@ -69,3 +89,5 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
+
+

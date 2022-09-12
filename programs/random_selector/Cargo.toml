@@ -1,12 +1,12 @@
 [package]
-name = "Flipper"
+name = "roller"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2018"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "flipper"
+name = "roller"
 doctest = false
 
 [features]

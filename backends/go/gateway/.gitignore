@@ -2,3 +2,5 @@ ci_run.zsh
 keys
 
 storage/**
+
+svc.key
