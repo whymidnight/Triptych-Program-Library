@@ -11,6 +11,7 @@ import (
 	giveawaysActions "triptych.labs/giveaways/v2/actions"
 	giveawaysDatabase "triptych.labs/giveaways/v2/database"
 	giveawaysJobs "triptych.labs/giveaways/v2/jobs"
+	giveawaysState "triptych.labs/giveaways/v2/state"
 
 	twitterActions "triptych.labs/twitter/v2/actions"
 	twitterConstants "triptych.labs/twitter/v2/constants"
@@ -24,6 +25,7 @@ func init() {
 	twitterState.Init()
 	giveawaysDatabase.Init()
   giveawaysJobs.Init()
+  giveawaysState.Init()
 }
 
 func main() {

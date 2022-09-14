@@ -30,11 +30,12 @@ var DB *nutsdb.DB = nil
 type Giveaway struct {
 	PublicKey    string
 	TweetId      string
-	Winner       string
+	Winner       [2]string
 	StartTime    int64
 	EndTime      int64
 	Participants int64
 	Hash         string
+	Profiles     [][2]string
 }
 
 // map[tweetId]Giveaway
@@ -149,8 +150,8 @@ func FindAndReadRecords(publicKey string) []Giveaway {
 	return giveaways
 }
 
-func FindRecord(tweetId string) Giveaway {
-	var giveaway Giveaway
+func FindRecord(tweetId string) *Giveaway {
+	var giveaway *Giveaway = nil
 
 	if err := DB.View(
 		func(tx *nutsdb.Tx) error {
@@ -171,7 +172,7 @@ func FindRecord(tweetId string) Giveaway {
 func (g *Giveaway) UpdateRecord() {
 	updateJs, _ := json.Marshal(g)
 
-	if err := DB.View(
+	if err := DB.Update(
 		func(tx *nutsdb.Tx) error {
 			if err := tx.Put(GIVEAWAYS_BUCKET, []byte(g.TweetId), updateJs, 0); err != nil {
 				return nil

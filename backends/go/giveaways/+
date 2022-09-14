@@ -4,9 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gagliardetto/solana-go"
@@ -129,14 +126,7 @@ func RollStart(originalMessage string, body interface{}) (response *RollStartRes
 		return nil, "bad transaction"
 	}
 
-	giveaway.Hash = sig.String()
-	giveaway.UpdateRecord()
-
-	giveawayJs, _ := json.MarshalIndent(giveaway, "", "  ")
-	log.Println(giveaway.Profiles)
-	fmt.Println(string(giveawayJs))
-
-	response.Signature = giveaway.Hash
+	response.Signature = sig.String()
 
 	return
 }
@@ -153,10 +143,17 @@ func RollConfirm(originalMessage string, body interface{}) (response *RollConfir
 
 	publicKey := rollStartRequest[PUBLIC_KEY].(string)
 	tweetId := rollStartRequest[TWEET_ID].(string)
+	tx := rollStartRequest["tx"].(string)
 
 	honest := utils.VerifyMessage(originalMessage, rollStartRequest[originalMessage].(string), publicKey)
 	if !honest {
 		return nil, "bad identity"
+	}
+
+	var transaction solana.Transaction
+	err := json.Unmarshal([]byte(tx), &transaction)
+	if err != nil {
+		return nil, "malformed transaction in request"
 	}
 
 	giveaway := database.FindRecord(tweetId)
@@ -166,19 +163,13 @@ func RollConfirm(originalMessage string, body interface{}) (response *RollConfir
 
 	// submit transaction
 	rpcClient := state.RpcClient
-	meta, err := rpcClient.GetTransaction(context.TODO(), solana.MustSignatureFromBase58(giveaway.Hash), nil)
+
+	sig, err := rpcClient.SendTransaction(context.TODO(), &transaction)
 	if err != nil {
-		return nil, "Unable to fetch Transaction Meta"
-	}
-	for _, item := range meta.Meta.LogMessages {
-		if rng := strings.Split(item, "---RNG: "); len(rng) == 2 {
-			rngI, _ := strconv.Atoi(rng[1])
-			giveaway.Winner = giveaway.Profiles[rngI]
-			giveaway.UpdateRecord()
-		}
+		return nil, "bad transaction"
 	}
 
-	response.Status = true
+	response.Status = bool
 
 	return
 }

@@ -26,50 +26,50 @@ func Handle(httpRequest *http.Request) (body interface{}, statusCode int) {
 		return
 	}
 
+	var response interface{}
+	var debug = ""
+
 	switch r.Method {
 	case "overview":
 		{
 
-			response, debug := Overview(message, r.Body)
-			if response == nil {
-				return debug, 400
-			}
-
-			return response, http.StatusOK
+			response, debug = Overview(message, r.Body)
 		}
 	case "create":
 		{
 
-			response, debug := Create(message, r.Body)
-			if response == nil {
-				return debug, 400
-			}
-
-			return response, http.StatusOK
+			response, debug = Create(message, r.Body)
 		}
 	case "rollInvoke":
 		{
 
-			response, debug := RollInvoke(message, r.Body)
-			if response == nil {
-				return debug, 400
-			}
-
-			return response, http.StatusOK
+			response, debug = RollInvoke(message, r.Body)
 		}
 	case "rollStart":
 		{
 
-			response, debug := RollStart(message, r.Body)
-			if response == nil {
-				return debug, 400
-			}
+			response, debug = RollStart(message, r.Body)
+		}
+	case "rollConfirm":
+		{
 
-			return response, http.StatusOK
+			response, debug = RollConfirm(message, r.Body)
+		}
+	case "participants":
+		{
+
+			response, debug = Participants(message, r.Body)
+		}
+	default:
+		{
+			response = "unsupported"
 		}
 	}
+	if response == nil {
+		return debug, 400
+	}
 
-	return
+	return response, 200
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {
@@ -89,5 +89,3 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
-
-

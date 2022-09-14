@@ -13,10 +13,7 @@ func GetTwitterToken(w http.ResponseWriter, r *http.Request) {
 	verificationCode := values.Get("oauth_verifier")
 	tokenKey := values.Get("oauth_token")
 
-	walletPublicKey, ok := state.TwitterAuthCodes[tokenKey]
-	if ok {
-		return
-	}
+	walletPublicKey := state.TwitterAuthCodes[tokenKey]
 
 	twitterClient := state.TwitterClient[*walletPublicKey]
 

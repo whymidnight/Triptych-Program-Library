@@ -12,7 +12,7 @@ import (
 
 type TweetLikesResponse struct {
 	NumberOfLikes    int `json:"numberOfLikes"`
-	NumberOfProfiles int `json:"numberOfProfiles"`
+	Profiles [][2]string `json:"numberOfProfiles"`
 }
 
 func GetTweet(tweetId string) *TweetLikesResponse {
@@ -66,7 +66,8 @@ func GetTweet(tweetId string) *TweetLikesResponse {
 
 	profiles := helpers.FindPublicKeysfromUsernames(usernames)
 	response.NumberOfLikes = len(usernames)
-	response.NumberOfProfiles = len(profiles)
+  response.Profiles = profiles
+  
 
 	return &response
 }

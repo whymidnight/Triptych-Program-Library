@@ -41,6 +41,10 @@ func Create(originalMessage string, body interface{}) (response *CreateResponse,
 		epoch = time.Now().Unix()
 	}
 
+	if record := database.FindRecord(tweetId); record != nil {
+		return nil, "Tweet already used"
+	}
+
 	log.Println("Waldo")
 	jobs.AddJob(fmt.Sprintf("Tweet Id: %s", tweetId), jobs.Job{
 		ExecutionTime: epoch,
@@ -52,7 +56,7 @@ func Create(originalMessage string, body interface{}) (response *CreateResponse,
 		TweetId:   tweetId,
 		StartTime: time.Now().Unix(),
 		EndTime:   epoch,
-		Winner:    "",
+		Winner:    [2]string{"", ""},
 	}
 	giveaway.WriteRecord(publicKey)
 

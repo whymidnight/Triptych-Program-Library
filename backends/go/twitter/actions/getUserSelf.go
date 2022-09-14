@@ -2,6 +2,7 @@ package actions
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"triptych.labs/twitter/v2/endpoints"
@@ -17,7 +18,7 @@ func GetUserSelfByPublicKey(publicKey string) *structs.UserSelfResponse {
 
 	ident := state.TwitterClient[publicKey]
 
-	data, err := ident.Client.BasicQuery(endpoints.USER_SELF)
+	data, err := ident.Client.BasicQuery(fmt.Sprintf("%s?%s", endpoints.USER_SELF, "user.fields=profile_image_url"))
 	if err != nil {
 		log.Println()
 		return nil

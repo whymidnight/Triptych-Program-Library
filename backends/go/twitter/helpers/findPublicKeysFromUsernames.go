@@ -26,18 +26,19 @@ func intersections(section1, section2 []string) (intersection []string) {
 	return
 }
 
-func FindPublicKeysfromUsernames(usernames []string) []string {
-	var profiles = make([]string, 0)
+func FindPublicKeysfromUsernames(usernames []string) [][2]string {
+
+	var users = make([]string, 0)
 	for k := range state.TwitterUsersPublicKey {
-		profiles = append(profiles, k)
+		users = append(users, k)
 	}
 
-	intersects := intersections(usernames, profiles)
+	intersects := intersections(usernames, users)
 
-	var publicKeys = make([]string, 0)
+	var profiles = make([][2]string, 0)
 	for _, username := range intersects {
-		publicKeys = append(publicKeys, state.TwitterUsersPublicKey[username])
+		profiles = append(profiles, [2]string{username, state.TwitterUsersPublicKey[username]})
 	}
 
-	return publicKeys
+	return profiles
 }

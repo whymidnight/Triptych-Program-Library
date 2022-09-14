@@ -48,9 +48,13 @@ func Init() {
 				log.Printf("[Processor %v] Processing job: %v - data: %v\n", pI, j.Name, string(j.Data))
 
 				kpis := twitterActions.GetTweet(job.TweetId)
+
 				giveaway := database.FindRecord(job.TweetId)
 
-				giveaway.Participants = int64(kpis.NumberOfProfiles)
+				giveaway.Participants = int64(len(kpis.Profiles))
+				giveaway.Profiles = kpis.Profiles
+				log.Println(kpis.Profiles)
+
 				giveaway.UpdateRecord()
 
 				log.Printf("[Processor %v] Done Processing job: %v\n", pI, j.Name)
