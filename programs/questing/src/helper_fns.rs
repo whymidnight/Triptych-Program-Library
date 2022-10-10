@@ -100,3 +100,21 @@ pub fn assert_valid_token(
 
     Ok(false)
 }
+
+pub fn get_modified_royalty(milestones: Vec<Milestone>, ticks: i64, base: u16) -> u16 {
+    let mut base_clone = base.clone() as f32;
+    for milestone in milestones {
+        if milestone.tick as i64 > ticks {
+            msg!("{} {} {}", base_clone, milestone.tick, ticks);
+            break;
+        }
+        let unit = base_clone * (100 as f32 - milestone.modifier as f32) / 100 as f32;
+        // round to .x decimal from .xxxxxx
+        let rounded = (unit * 10.0).round() / 10.0;
+        base_clone = rounded;
+    }
+
+    let modified_royalty = base_clone * u16::pow(10, 2) as f32;
+
+    return modified_royalty as u16;
+}

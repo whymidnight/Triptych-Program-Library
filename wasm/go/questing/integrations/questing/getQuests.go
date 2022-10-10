@@ -2,7 +2,6 @@ package questing
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"syscall/js"
 
@@ -13,7 +12,7 @@ import (
 	"triptych.labs/utils"
 )
 
-type tenderResponse struct {
+type TenderResponse struct {
 	MintAddress solana.PublicKey
 	Amount      uint64
 	Name        string
@@ -21,7 +20,7 @@ type tenderResponse struct {
 	Decimals    uint8
 }
 
-type stakingConfigResponse struct {
+type StakingConfigResponse struct {
 	MintAddress  solana.PublicKey
 	YieldPer     uint64
 	YieldPerTime uint64
@@ -39,12 +38,13 @@ type QuestResponse struct {
 	RequiredLevel   uint64
 	RequiredXp      uint64
 	WlCandyMachines []solana.PublicKey
-	Rewards         []questing.Reward
-	Tender          *tenderResponse
+	Rewards         *[]questing.Reward
+	Tender          *TenderResponse
 	TenderSplits    *[]questing.Split
 	Xp              uint64
-	StakingConfig   *stakingConfigResponse
+	StakingConfig   *StakingConfigResponse
 	PairsConfig     *questing.PairsConfig
+	Milestones      *[]questing.Milestone
 }
 
 func GetQuests(this js.Value, args []js.Value) interface{} {
@@ -66,6 +66,7 @@ func GetQuests(this js.Value, args []js.Value) interface{} {
 			}(&reject)
 			rpcClient := rpc.New(utils.NETWORK)
 
+			fmt.Println("fetching quests", oracle.String(), utils.NETWORK)
 			quests := getQuests(rpcClient, oracle)
 
 			questsJSON, err := json.Marshal(quests)
@@ -95,23 +96,24 @@ func getQuests(rpcClient *rpc.Client, oracle solana.PublicKey) map[solana.Public
 	questsPda, _ := quests.GetQuests(oracle)
 	questsPdaData := quests.GetQuestsData(rpcClient, questsPda)
 	if questsPdaData == nil {
+		fmt.Println("questsPdaData is nil", questsPda)
 		return questsData
 	}
 	for i := range make([]int, questsPdaData.Quests) {
 		quest, _ := quests.GetQuest(oracle, uint64(i))
 		questData := quests.GetQuestData(rpcClient, quest)
 		if questData == nil {
-			fmt.Println(quest)
-			panic(errors.New("bad quest"))
+			fmt.Println("bad quest", quest)
+			continue
 		}
 
-		var tender *tenderResponse = nil
-		var stakingConfig *stakingConfigResponse = nil
+		var tender *TenderResponse = nil
+		var stakingConfig *StakingConfigResponse = nil
 
 		if questData.Tender != nil {
 			tendersMintMeta, tendersMetadata := utils.GetTokensMetadataData(rpcClient, []solana.PublicKey{questData.Tender.MintAddress})
 
-			tender = &tenderResponse{
+			tender = &TenderResponse{
 				MintAddress: questData.Tender.MintAddress,
 				Amount:      questData.Tender.Amount,
 				Name:        tendersMetadata[0].Name,
@@ -122,7 +124,7 @@ func getQuests(rpcClient *rpc.Client, oracle solana.PublicKey) map[solana.Public
 		if questData.StakingConfig != nil {
 			tendersMintMeta, tendersMetadata := utils.GetTokensMetadataData(rpcClient, []solana.PublicKey{questData.StakingConfig.MintAddress})
 
-			stakingConfig = &stakingConfigResponse{
+			stakingConfig = &StakingConfigResponse{
 				MintAddress:  questData.StakingConfig.MintAddress,
 				YieldPer:     questData.StakingConfig.YieldPer,
 				YieldPerTime: questData.StakingConfig.YieldPerTime,
@@ -141,12 +143,13 @@ func getQuests(rpcClient *rpc.Client, oracle solana.PublicKey) map[solana.Public
 			RequiredLevel:   questData.RequiredLevel,
 			RequiredXp:      questData.RequiredXp,
 			WlCandyMachines: questData.WlCandyMachines,
-			Rewards:         questData.Rewards,
+			Rewards:         &questData.Rewards,
 			Tender:          tender,
 			TenderSplits:    questData.TenderSplits,
 			Xp:              questData.Xp,
 			StakingConfig:   stakingConfig,
 			PairsConfig:     questData.PairsConfig,
+			Milestones:      questData.Milestones,
 		}
 
 	}

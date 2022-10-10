@@ -7,7 +7,7 @@ use ix_accounts::*;
 use std::result::Result;
 use structs::*;
 
-declare_id!("EocXeJ7KvMZD9k1mVWVHP6KWpRhsLP666wtahSBEMawr");
+declare_id!("3PZXkx32aemrHWWHzo15JoxNpbXKuiwR7VDfTwCEeSTQ");
 
 mod constants;
 mod errors;

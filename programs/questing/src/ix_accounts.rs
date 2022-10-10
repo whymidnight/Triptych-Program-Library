@@ -1,8 +1,11 @@
 use crate::constants::*;
+use crate::program::Questing;
 use crate::state::*;
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{Mint, Token, TokenAccount};
+use assets;
+use assets::program::Assets;
 
 #[derive(Accounts)]
 pub struct RegisterQuestRecorder<'info> {
@@ -41,8 +44,14 @@ pub struct ProposeQuestRecord<'info> {
 #[derive(Accounts)]
 #[instruction(quest_proposal_index: u64, quest_proposal_bump: u8)]
 pub struct EnterQuest<'info> {
+    #[account(mut)]
+    /// CHECK: checked in ix
+    pub pixelballz_edition: UncheckedAccount<'info>,
+    #[account(mut)]
     /// CHECK: checked in ix
     pub pixelballz_metadata: UncheckedAccount<'info>,
+    #[account(mut)]
+    pub pixelballz_token_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
     pub pixelballz_token_account: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
@@ -58,11 +67,19 @@ pub struct EnterQuest<'info> {
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
+    /// CHECK: checked in cpi
+    pub mpl_metadata_program: UncheckedAccount<'info>,
 }
 
 #[derive(Accounts)]
-#[instruction(quest_proposal_index: u64, quest_proposal_bump: u8)]
+#[instruction(quest_proposal_index: u64, quest_proposal_bump: u8, quest_acc_bump: u8)]
 pub struct FlushQuestRecord<'info> {
+    #[account(
+        mut,
+        seeds = [QUEST_PDA_SEED.as_ref(), initializer.key().as_ref(), quest_proposal.key().as_ref(), quest.key().as_ref()],
+        bump = quest_acc_bump,
+    )]
+    pub quest_acc: Account<'info, QuestAccount>,
     #[account(
         mut,
         seeds = [quest.key().as_ref(), initializer.key().as_ref(), quest_proposal_index.to_le_bytes().as_ref()],
@@ -72,6 +89,9 @@ pub struct FlushQuestRecord<'info> {
     #[account(mut)]
     pub quest: Account<'info, Quest>,
     #[account(mut)]
+    /// CHECK: checked in ix
+    pub pixelballz_edition: UncheckedAccount<'info>,
+    #[account(mut)]
     pub initializer: Signer<'info>,
     #[account(mut)]
     pub pixelballz_mint: Box<Account<'info, Mint>>,
@@ -79,6 +99,12 @@ pub struct FlushQuestRecord<'info> {
     pub pixelballz_token_account: Box<Account<'info, TokenAccount>>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
+    pub questing_program: Program<'info, Questing>,
+    /// CHECK: checked in cpi
+    pub mpl_metadata_program: UncheckedAccount<'info>,
+    /// CHECK: checked in cpi
+    #[account(mut)]
+    pub metadata_account: UncheckedAccount<'info>,
 }
 
 #[derive(Accounts)]
@@ -161,6 +187,22 @@ pub struct CreateQuest<'info> {
         bump,
         payer = oracle,
         space = Quest::space(0)
+    )]
+    pub quest: Box<Account<'info, Quest>>,
+    #[account(mut)]
+    pub quests: Box<Account<'info, Quests>>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+#[instruction(quest_bump: u8, quest_index: u64)]
+pub struct UpdateQuest<'info> {
+    #[account(mut)]
+    pub oracle: Signer<'info>,
+    #[account(
+        mut,
+        seeds = [QUEST_ORACLE_SEED.as_ref(), oracle.key().as_ref(), &quest_index.to_le_bytes()],
+        bump = quest_bump,
     )]
     pub quest: Box<Account<'info, Quest>>,
     #[account(mut)]

@@ -23,7 +23,7 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 )
 
-const DEVNET = "https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/"
+const DEVNET = "https://devnet.genesysgo.net"
 const TESTNET = "https://api.testnet.solana.com"
 const NETWORK = DEVNET
 
@@ -33,7 +33,7 @@ const RIGHT = 2
 var STAKING_MINT solana.PublicKey
 
 func init() {
-	questing.SetProgramID(solana.MustPublicKeyFromBase58("9iMuz8Lf27R9Y2jQhWM1wrSVtPB4Tt5wqkh1opjMTK11"))
+	questing.SetProgramID(solana.MustPublicKeyFromBase58("CU9VZcEMUNgQ2iQZQE5o5T1ixzDP9wwnwrmWoQpc5c6S"))
 }
 
 func main() {

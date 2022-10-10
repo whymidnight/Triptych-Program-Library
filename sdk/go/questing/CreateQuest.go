@@ -23,6 +23,7 @@ type CreateQuest struct {
 	Enabled         *bool
 	StakingConfig   *StakingConfig `bin:"optional"`
 	PairsConfig     *PairsConfig   `bin:"optional"`
+	Milestones      *[]Milestone   `bin:"optional"`
 	Rewards         *[]Reward
 
 	// [0] = [WRITE, SIGNER] oracle
@@ -106,6 +107,12 @@ func (inst *CreateQuest) SetStakingConfig(stakingConfig StakingConfig) *CreateQu
 // SetPairsConfig sets the "pairsConfig" parameter.
 func (inst *CreateQuest) SetPairsConfig(pairsConfig PairsConfig) *CreateQuest {
 	inst.PairsConfig = &pairsConfig
+	return inst
+}
+
+// SetMilestones sets the "milestones" parameter.
+func (inst *CreateQuest) SetMilestones(milestones []Milestone) *CreateQuest {
+	inst.Milestones = &milestones
 	return inst
 }
 
@@ -229,7 +236,7 @@ func (inst *CreateQuest) EncodeToTree(parent ag_treeout.Branches) {
 				ParentFunc(func(instructionBranch ag_treeout.Branches) {
 
 					// Parameters of the instruction:
-					instructionBranch.Child("Params[len=12]").ParentFunc(func(paramsBranch ag_treeout.Branches) {
+					instructionBranch.Child("Params[len=13]").ParentFunc(func(paramsBranch ag_treeout.Branches) {
 						paramsBranch.Child(ag_format.Param("     QuestIndex", *inst.QuestIndex))
 						paramsBranch.Child(ag_format.Param("           Name", *inst.Name))
 						paramsBranch.Child(ag_format.Param("       Duration", *inst.Duration))
@@ -241,6 +248,7 @@ func (inst *CreateQuest) EncodeToTree(parent ag_treeout.Branches) {
 						paramsBranch.Child(ag_format.Param("        Enabled", *inst.Enabled))
 						paramsBranch.Child(ag_format.Param("  StakingConfig (OPT)", inst.StakingConfig))
 						paramsBranch.Child(ag_format.Param("    PairsConfig (OPT)", inst.PairsConfig))
+						paramsBranch.Child(ag_format.Param("     Milestones (OPT)", inst.Milestones))
 						paramsBranch.Child(ag_format.Param("        Rewards", *inst.Rewards))
 					})
 
@@ -376,6 +384,24 @@ func (obj CreateQuest) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error
 			}
 		}
 	}
+	// Serialize `Milestones` param (optional):
+	{
+		if obj.Milestones == nil {
+			err = encoder.WriteBool(false)
+			if err != nil {
+				return err
+			}
+		} else {
+			err = encoder.WriteBool(true)
+			if err != nil {
+				return err
+			}
+			err = encoder.Encode(obj.Milestones)
+			if err != nil {
+				return err
+			}
+		}
+	}
 	// Serialize `Rewards` param:
 	err = encoder.Encode(obj.Rewards)
 	if err != nil {
@@ -479,6 +505,19 @@ func (obj *CreateQuest) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err er
 			}
 		}
 	}
+	// Deserialize `Milestones` (optional):
+	{
+		ok, err := decoder.ReadBool()
+		if err != nil {
+			return err
+		}
+		if ok {
+			err = decoder.Decode(&obj.Milestones)
+			if err != nil {
+				return err
+			}
+		}
+	}
 	// Deserialize `Rewards`:
 	err = decoder.Decode(&obj.Rewards)
 	if err != nil {
@@ -501,6 +540,7 @@ func NewCreateQuestInstruction(
 	enabled bool,
 	stakingConfig StakingConfig,
 	pairsConfig PairsConfig,
+	milestones []Milestone,
 	rewards []Reward,
 	// Accounts:
 	oracle ag_solanago.PublicKey,
@@ -519,6 +559,7 @@ func NewCreateQuestInstruction(
 		SetEnabled(enabled).
 		SetStakingConfig(stakingConfig).
 		SetPairsConfig(pairsConfig).
+		SetMilestones(milestones).
 		SetRewards(rewards).
 		SetOracleAccount(oracle).
 		SetQuestAccount(quest).

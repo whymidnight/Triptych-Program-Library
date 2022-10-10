@@ -3,6 +3,7 @@ package quests
 import (
 	"context"
 	"crypto/sha256"
+	"fmt"
 	"log"
 
 	ag_binary "github.com/gagliardetto/binary"
@@ -16,12 +17,14 @@ import (
 func GetQuestsData(rpcClient *rpc.Client, quests solana.PublicKey) *questing.Quests {
 	bin, _ := rpcClient.GetAccountInfoWithOpts(context.TODO(), quests, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
 	if bin == nil {
+		fmt.Println("quests bin is nil")
 		return nil
 	}
 	var data questing.Quests
 	decoder := ag_binary.NewBorshDecoder(bin.Value.Data.GetBinary())
 	err := data.UnmarshalWithDecoder(decoder)
 	if err != nil {
+		fmt.Println("cannot unmarshal data")
 		panic(err)
 	}
 

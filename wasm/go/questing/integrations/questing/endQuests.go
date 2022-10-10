@@ -23,6 +23,7 @@ func EndQuests(this js.Value, args []js.Value) interface{} {
 		go func() {
 			defer func(_reject *js.Value) {
 				if r := recover(); r != nil {
+					fmt.Println(r)
 					errorConstructor := js.Global().Get("Error")
 					errorObject := errorConstructor.New("Please retry")
 					_reject.Invoke(errorObject)
@@ -96,7 +97,6 @@ func endQuests(holder, quest solana.PublicKey, questProposalsIndexes []uint64) (
 	}
 
 	txJson, _ = json.MarshalIndent(transactions, "", "  ")
-	fmt.Println(string(txJson))
 	return txJson, nil
 
 }

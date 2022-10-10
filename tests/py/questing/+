@@ -1,0 +1,43 @@
+"""
+This program asserts the following principles:
+    Such Base Input is not indicative of the real world.
+    Such simulation assumes a fuzzed input.
+    Such Output is computed for interpretation of correctness.
+"""
+
+
+class Milestone:
+    tick: int
+    modifier: float
+
+    def __init__(self, tick: int, modifier: float) -> None:
+        self.tick = tick
+        self.modifier = modifier
+
+        pass
+
+
+if __name__ == "__main__":
+    import sys
+
+    until = int(sys.argv[1])
+    base = int(sys.argv[2])
+
+    milestones = [
+        Milestone(7, 2.5),
+        Milestone(15, 2.5),
+        Milestone(30, 2.5),
+        Milestone(60, 2.5),
+        Milestone(180, 2.5),
+        Milestone(365, 2.5),
+    ]
+
+    for milestone in milestones:
+        if milestone.tick >= until:
+            break
+
+        unit = base * (100 - milestone.modifier) / 100
+        rounded = round(unit, 1)
+        print(milestone.tick, base, rounded)
+        base = int(rounded * pow(10, 1))
+

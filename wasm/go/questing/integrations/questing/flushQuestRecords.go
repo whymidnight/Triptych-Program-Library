@@ -23,6 +23,7 @@ func FlushQuestRecords(this js.Value, args []js.Value) interface{} {
 		go func() {
 			defer func(_reject *js.Value) {
 				if r := recover(); r != nil {
+					fmt.Println(r)
 					errorConstructor := js.Global().Get("Error")
 					errorObject := errorConstructor.New("Please retry")
 					_reject.Invoke(errorObject)

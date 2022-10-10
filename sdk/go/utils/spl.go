@@ -109,3 +109,29 @@ func GetTokenMintsData(rpcClient *rpc.Client, tokenMints []solana.PublicKey) map
 
 }
 
+func GetTokensAccountsMints(rpcClient *rpc.Client, oracle solana.PublicKey) []solana.PublicKey {
+	tokenAccountsResult, err := rpcClient.GetTokenAccountsByOwner(context.TODO(), oracle, &rpc.GetTokenAccountsConfig{
+		ProgramId: solana.TokenProgramID.ToPointer(),
+	}, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	tokenMints := make([]solana.PublicKey, 0)
+	tokenAccounts := tokenAccountsResult.Value
+
+	for _, account := range tokenAccounts {
+
+		var data token.Account
+		decoder := ag_binary.NewBorshDecoder(account.Account.Data.GetBinary())
+		err = data.UnmarshalWithDecoder(decoder)
+		if err != nil {
+			panic(err)
+		}
+
+		tokenMints = append(tokenMints, data.Mint)
+
+	}
+
+	return tokenMints
+}

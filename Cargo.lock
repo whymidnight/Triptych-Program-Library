@@ -39,6 +39,7 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "arrayref",
+ "assets",
  "mpl-token-metadata",
  "solana-program",
  "spl-associated-token-account",
@@ -270,6 +271,20 @@ name = "arrayvec"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8da52d66c7071e2e3fa2a1e5c6d088fec47b593032b254f5e980de8ea54454d6"
+
+[[package]]
+name = "assets"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "arrayref",
+ "mpl-token-metadata",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+ "spl-token-metadata",
+]
 
 [[package]]
 name = "autocfg"
@@ -882,6 +897,20 @@ dependencies = [
  "solana-program",
  "spl-token",
  "thiserror",
+]
+
+[[package]]
+name = "nexus"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "arrayref",
+ "mpl-token-metadata",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+ "spl-token-metadata",
 ]
 
 [[package]]

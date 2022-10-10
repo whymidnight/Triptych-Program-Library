@@ -1,0 +1,20 @@
+use crate::constants::NEX;
+use crate::state::Nex;
+use anchor_lang::prelude::*;
+
+#[derive(Accounts)]
+#[instruction(moniker: string)]
+pub struct NewRoll<'info> {
+    #[account(mut)]
+    pub oracle: Signer<'info>,
+    #[account(
+        init,
+        seeds = [NEx.as_ref(), moniker.as_ref()],
+        bump,
+        payer = oracle,
+        space = QuestRecorder::space(0)
+    )]
+    pub nex: Account<'info, Nex>,
+    /// CHECK: am lazy
+    pub system_program: Program<'info, System>,
+}

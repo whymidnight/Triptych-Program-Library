@@ -31,7 +31,6 @@ func StartQuest(rpcClient *rpc.Client, initializer, questPda solana.PublicKey, q
 		SetTokenProgramAccount(solana.TokenProgramID)
 
 	if questData.Tender != nil && questData.TenderSplits != nil {
-		fmt.Println(*questData.Tender, questData.TenderSplits)
 		tenderTokenAccount, _ := utils.GetTokenWallet(initializer, questData.Tender.MintAddress)
 		startQuestIx.Append(&solana.AccountMeta{PublicKey: tenderTokenAccount, IsWritable: true, IsSigner: false})
 		for _, tenderSplit := range *questData.TenderSplits {
@@ -54,3 +53,5 @@ func StartQuest(rpcClient *rpc.Client, initializer, questPda solana.PublicKey, q
 
 	return startQuestIx.Build()
 }
+
+

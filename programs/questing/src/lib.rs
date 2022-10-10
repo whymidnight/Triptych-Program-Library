@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::{self, Create};
-use anchor_spl::token::{self, Burn, Mint, MintTo, Transfer};
+use anchor_spl::token::{self, Burn, MintTo, Transfer};
 use constants::*;
 use errors::QuestError;
 use helper_fns::*;
@@ -8,7 +8,9 @@ use ix_accounts::*;
 use std::result::Result;
 use structs::*;
 
-declare_id!("9iMuz8Lf27R9Y2jQhWM1wrSVtPB4Tt5wqkh1opjMTK11");
+use assets;
+
+declare_id!("CU9VZcEMUNgQ2iQZQE5o5T1ixzDP9wwnwrmWoQpc5c6S");
 
 mod constants;
 mod errors;
@@ -20,6 +22,9 @@ pub mod structs;
 #[program]
 pub mod questing {
 
+    use anchor_spl::token::{approve, Approve};
+    use assets::cpi::accounts::InvokeRoyaltyChange;
+    use mpl_token_metadata::instruction::{freeze_delegated_account, thaw_delegated_account};
     use solana_program::program::invoke_signed;
 
     use super::*;
@@ -222,6 +227,7 @@ pub mod questing {
         enabled: bool,
         staking_config: Option<StakingConfig>,
         pairs_config: Option<PairsConfig>,
+        milestones: Option<Vec<Milestone>>,
         rewards: Vec<Reward>,
     ) -> Result<(), Error> {
         let quest = &mut ctx.accounts.quest;
@@ -262,6 +268,70 @@ pub mod questing {
                 return Err(QuestError::RatioTooBig.into());
             }
             quest.pairs_config = Some(pairs_config_unwrapped);
+        }
+        if milestones.is_some() {
+            let milestones_unwrapped = milestones.unwrap();
+            quest.milestones = Some(milestones_unwrapped);
+        }
+
+        quests.quests += 1;
+
+        Ok(())
+    }
+
+    pub fn update_quest(
+        ctx: Context<UpdateQuest>,
+        _quest_bump: u8,
+        _quest_index: u64,
+        name: String,
+        duration: i64,
+        wl_candy_machines: Vec<Pubkey>,
+        tender: Option<Tender>,
+        tender_splits: Option<Vec<Split>>,
+        xp: u64,
+        required_level: Option<u64>,
+        enabled: bool,
+        staking_config: Option<StakingConfig>,
+        pairs_config: Option<PairsConfig>,
+        milestones: Option<Vec<Milestone>>,
+        rewards: Vec<Reward>,
+    ) -> Result<(), Error> {
+        let quest = &mut ctx.accounts.quest;
+        let quests = &mut ctx.accounts.quests;
+
+        quest.enabled = enabled;
+        quest.name = name;
+        quest.duration = duration;
+        quest.wl_candy_machines = wl_candy_machines;
+        quest.rewards = rewards;
+
+        if tender.is_some() && tender_splits.is_some() {
+            quest.tender = tender;
+            quest.tender_splits = tender_splits;
+        }
+        quest.xp = xp;
+
+        if required_level.is_some() {
+            quest.required_level = required_level.unwrap();
+            quest.required_xp = get_sum_xp_from_level(quest.required_level).unwrap();
+        } else {
+            quest.required_level = 0;
+            quest.required_xp = 0;
+        }
+
+        if staking_config.is_some() {
+            quest.staking_config = staking_config;
+        }
+        if pairs_config.is_some() {
+            let pairs_config_unwrapped = pairs_config.unwrap();
+            if (pairs_config_unwrapped.left + pairs_config_unwrapped.right) > 5 {
+                return Err(QuestError::RatioTooBig.into());
+            }
+            quest.pairs_config = Some(pairs_config_unwrapped);
+        }
+        if milestones.is_some() {
+            let milestones_unwrapped = milestones.unwrap();
+            quest.milestones = Some(milestones_unwrapped);
         }
 
         quests.quests += 1;
@@ -325,10 +395,12 @@ pub mod questing {
         _quest_proposal_index: u64,
         _quest_proposal_bump: u8,
         side_enum: String,
+        quest_bump: u8,
     ) -> Result<(), Error> {
         let token_program = &ctx.accounts.token_program;
         let initializer = &mut ctx.accounts.initializer;
         let quest = &mut ctx.accounts.quest;
+        let pixelballz_token_mint = &mut ctx.accounts.pixelballz_token_mint;
         let pixelballz_token_account = &mut ctx.accounts.pixelballz_token_account;
         let quest_proposal = &mut ctx.accounts.quest_proposal;
         let quest_pairs_config = quest.pairs_config.clone().unwrap();
@@ -395,6 +467,9 @@ pub mod questing {
             quest_proposal.fulfilled = true;
         }
 
+        /*
+         * OLD!
+
         token::set_authority(
             CpiContext::new(
                 token_program.to_account_info(),
@@ -406,7 +481,58 @@ pub mod questing {
             spl_token::instruction::AuthorityType::AccountOwner,
             Some(quest.key()),
         )?;
+        */
+        /*
+         * NEW!
 
+            * Approve `quest` over `pixelballz_token_account`
+            * Freeze
+        */
+
+        let mpl_metadata_program = &ctx.accounts.mpl_metadata_program;
+        let edition = &ctx.accounts.pixelballz_edition;
+        let quest_index_bytes = quest.index.to_le_bytes();
+        let quest_bump_bytes = quest_bump.to_le_bytes();
+
+        let quest_authority = &[
+            QUEST_ORACLE_SEED.as_ref(),
+            quest.oracle.as_ref(),
+            quest_index_bytes.as_ref(),
+            quest_bump_bytes.as_ref(),
+        ];
+        let signers = &[&quest_authority[..]];
+
+        approve(
+            CpiContext::new(
+                token_program.to_account_info(),
+                Approve {
+                    to: pixelballz_token_account.to_account_info(),
+                    delegate: quest.to_account_info(),
+                    authority: initializer.to_account_info(),
+                },
+            ),
+            1,
+        )
+        .unwrap();
+
+        invoke_signed(
+            &freeze_delegated_account(
+                mpl_metadata_program.key(),
+                quest.key(),
+                pixelballz_token_account.key(),
+                edition.key(),
+                pixelballz_token_mint.key(),
+            ),
+            &[
+                quest.to_account_info(),
+                pixelballz_token_account.to_account_info(),
+                edition.to_account_info(),
+                pixelballz_token_mint.to_account_info(),
+                token_program.to_account_info(),
+            ],
+            signers,
+        )
+        .unwrap();
         Ok(())
     }
 
@@ -534,13 +660,16 @@ pub mod questing {
         ctx: Context<'_, '_, '_, 'info, FlushQuestRecord<'info>>,
         _quest_proposal_index: u64,
         _quest_proposal_bump: u8,
+        _quest_acc_bump: u8,
         quest_bump: u8,
+        authority_bump: Option<u8>,
     ) -> Result<(), Error> {
         let token_program = &ctx.accounts.token_program;
         let pixelballz_token_account = &mut ctx.accounts.pixelballz_token_account;
         let pixelballz_mint = &mut ctx.accounts.pixelballz_mint;
         let pixelballz_mint_key = pixelballz_mint.key();
         let quest = &mut ctx.accounts.quest;
+        let quest_acc = &mut ctx.accounts.quest_acc;
         let quest_proposal = &mut ctx.accounts.quest_proposal;
 
         if quest_proposal.started {
@@ -574,30 +703,86 @@ pub mod questing {
             quest_proposal.withdrawn = true;
         }
 
+        let metadata_account = &ctx.accounts.metadata_account;
+        let metadata =
+            helper_fns::assert_valid_metadata(metadata_account, &pixelballz_mint.key()).unwrap();
+
+        // Modify Royalty of Token
+
+        let TICK_PERIOD: i64 = 20; // 60 secs
+        let duration = quest_acc.end_time - quest_acc.start_time;
+        let ticks = duration / TICK_PERIOD as i64;
+        msg!("date meta {} {}", quest_acc.end_time, quest_acc.start_time);
+        msg!("date meta {} {}", duration, ticks);
+        if quest.milestones.is_some() {
+            let milestones = quest.milestones.clone().unwrap();
+            if milestones.len() > 0 {
+                let modified_royalty = get_modified_royalty(
+                    milestones,
+                    ticks,
+                    (metadata.data.seller_fee_basis_points as f32 / f32::powf(10.0, 2.0)) as u16,
+                );
+                msg!("{}", modified_royalty);
+
+                // cpi assets manager to update royalty
+
+                let assets_program = &ctx.remaining_accounts[0];
+                let original_authority = &ctx.remaining_accounts[1];
+                let authority_pda = &ctx.remaining_accounts[2];
+
+                assets::cpi::invoke_royalty_change(
+                    CpiContext::new(
+                        assets_program.to_account_info(),
+                        InvokeRoyaltyChange {
+                            original_authority: original_authority.to_account_info(),
+                            authority: authority_pda.to_account_info(),
+                            caller_program: ctx.accounts.questing_program.to_account_info(),
+                            mpl_metadata_program: ctx
+                                .accounts
+                                .mpl_metadata_program
+                                .to_account_info(),
+                            metadata_account: metadata_account.to_account_info(),
+                            mint: pixelballz_mint.to_account_info(),
+                        },
+                    ),
+                    authority_bump.unwrap(),
+                    modified_royalty,
+                )
+                .unwrap();
+            }
+        }
+
+        // Transfer NFT quested back
+        let mpl_metadata_program = &ctx.accounts.mpl_metadata_program;
+        let edition = &ctx.accounts.pixelballz_edition;
         let quest_index_bytes = quest.index.to_le_bytes();
         let quest_bump_bytes = quest_bump.to_le_bytes();
 
-        let seeds_with_bump = &[
+        let quest_authority = &[
             QUEST_ORACLE_SEED.as_ref(),
             quest.oracle.as_ref(),
             quest_index_bytes.as_ref(),
             quest_bump_bytes.as_ref(),
         ];
-        let quest_authority = &[&seeds_with_bump[..]];
-
-        // Transfer NFT quested back
-        token::set_authority(
-            CpiContext::new_with_signer(
-                token_program.to_account_info(),
-                token::SetAuthority {
-                    current_authority: quest.to_account_info(),
-                    account_or_mint: pixelballz_token_account.to_account_info(),
-                },
-                quest_authority,
+        let signers = &[&quest_authority[..]];
+        invoke_signed(
+            &thaw_delegated_account(
+                mpl_metadata_program.key(),
+                quest.key(),
+                pixelballz_token_account.key(),
+                edition.key(),
+                pixelballz_mint.key(),
             ),
-            spl_token::instruction::AuthorityType::AccountOwner,
-            Some(ctx.accounts.initializer.key()),
-        )?;
+            &[
+                quest.to_account_info(),
+                pixelballz_token_account.to_account_info(),
+                edition.to_account_info(),
+                pixelballz_mint.to_account_info(),
+                token_program.to_account_info(),
+            ],
+            signers,
+        )
+        .unwrap();
 
         Ok(())
     }
@@ -642,9 +827,18 @@ pub mod questing {
         ];
         let reward_authority = &[&reward_authority_seeds[..]];
 
-        if now > quest_account.end_time && quest_account.last_claim == quest_account.end_time {
+        /*
+        if now < quest_account.end_time && quest_account.last_claim == quest_account.end_time {
+            msg!(
+                "{} {} {} {}",
+                now,
+                quest_account.end_time,
+                quest_account.last_claim,
+                quest_account.end_time
+            );
             return Ok(());
         }
+        */
 
         let duration = now - quest_account.last_claim;
         quest_account.last_claim = now;
@@ -696,7 +890,6 @@ pub mod questing {
         let quest_account = &mut ctx.accounts.quest_acc;
 
         let quest_proposal = &mut ctx.accounts.quest_proposal;
-        let quest_recorder = &mut ctx.accounts.quest_recorder;
 
         /*
         for deposit in quest_proposal.depositing_left.clone().into_iter() {
@@ -725,6 +918,7 @@ pub mod questing {
 
         quest_account.completed = Some(true);
         quest_proposal.finished = true;
+        quest_account.end_time = now;
 
         let mut remaining_accounts: usize = 0;
 

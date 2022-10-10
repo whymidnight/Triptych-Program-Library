@@ -14,28 +14,40 @@ import (
 type FlushQuestRecord struct {
 	QuestProposalIndex *uint64
 	QuestProposalBump  *uint8
+	QuestAccBump       *uint8
 	QuestBump          *uint8
+	AuthorityBump      *uint8 `bin:"optional"`
 
-	// [0] = [WRITE] questProposal
+	// [0] = [WRITE] questAcc
 	//
-	// [1] = [WRITE] quest
+	// [1] = [WRITE] questProposal
 	//
-	// [2] = [WRITE, SIGNER] initializer
+	// [2] = [WRITE] quest
 	//
-	// [3] = [WRITE] pixelballzMint
+	// [3] = [WRITE] pixelballzEdition
 	//
-	// [4] = [WRITE] pixelballzTokenAccount
+	// [4] = [WRITE, SIGNER] initializer
 	//
-	// [5] = [] tokenProgram
+	// [5] = [WRITE] pixelballzMint
 	//
-	// [6] = [] systemProgram
+	// [6] = [WRITE] pixelballzTokenAccount
+	//
+	// [7] = [] tokenProgram
+	//
+	// [8] = [] systemProgram
+	//
+	// [9] = [] questingProgram
+	//
+	// [10] = [] mplMetadataProgram
+	//
+	// [11] = [WRITE] metadataAccount
 	ag_solanago.AccountMetaSlice `bin:"-"`
 }
 
 // NewFlushQuestRecordInstructionBuilder creates a new `FlushQuestRecord` instruction builder.
 func NewFlushQuestRecordInstructionBuilder() *FlushQuestRecord {
 	nd := &FlushQuestRecord{
-		AccountMetaSlice: make(ag_solanago.AccountMetaSlice, 7),
+		AccountMetaSlice: make(ag_solanago.AccountMetaSlice, 12),
 	}
 	return nd
 }
@@ -52,87 +64,154 @@ func (inst *FlushQuestRecord) SetQuestProposalBump(questProposalBump uint8) *Flu
 	return inst
 }
 
+// SetQuestAccBump sets the "questAccBump" parameter.
+func (inst *FlushQuestRecord) SetQuestAccBump(questAccBump uint8) *FlushQuestRecord {
+	inst.QuestAccBump = &questAccBump
+	return inst
+}
+
 // SetQuestBump sets the "questBump" parameter.
 func (inst *FlushQuestRecord) SetQuestBump(questBump uint8) *FlushQuestRecord {
 	inst.QuestBump = &questBump
 	return inst
 }
 
+// SetAuthorityBump sets the "authorityBump" parameter.
+func (inst *FlushQuestRecord) SetAuthorityBump(authorityBump uint8) *FlushQuestRecord {
+	inst.AuthorityBump = &authorityBump
+	return inst
+}
+
+// SetQuestAccAccount sets the "questAcc" account.
+func (inst *FlushQuestRecord) SetQuestAccAccount(questAcc ag_solanago.PublicKey) *FlushQuestRecord {
+	inst.AccountMetaSlice[0] = ag_solanago.Meta(questAcc).WRITE()
+	return inst
+}
+
+// GetQuestAccAccount gets the "questAcc" account.
+func (inst *FlushQuestRecord) GetQuestAccAccount() *ag_solanago.AccountMeta {
+	return inst.AccountMetaSlice.Get(0)
+}
+
 // SetQuestProposalAccount sets the "questProposal" account.
 func (inst *FlushQuestRecord) SetQuestProposalAccount(questProposal ag_solanago.PublicKey) *FlushQuestRecord {
-	inst.AccountMetaSlice[0] = ag_solanago.Meta(questProposal).WRITE()
+	inst.AccountMetaSlice[1] = ag_solanago.Meta(questProposal).WRITE()
 	return inst
 }
 
 // GetQuestProposalAccount gets the "questProposal" account.
 func (inst *FlushQuestRecord) GetQuestProposalAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(0)
+	return inst.AccountMetaSlice.Get(1)
 }
 
 // SetQuestAccount sets the "quest" account.
 func (inst *FlushQuestRecord) SetQuestAccount(quest ag_solanago.PublicKey) *FlushQuestRecord {
-	inst.AccountMetaSlice[1] = ag_solanago.Meta(quest).WRITE()
+	inst.AccountMetaSlice[2] = ag_solanago.Meta(quest).WRITE()
 	return inst
 }
 
 // GetQuestAccount gets the "quest" account.
 func (inst *FlushQuestRecord) GetQuestAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(1)
+	return inst.AccountMetaSlice.Get(2)
+}
+
+// SetPixelballzEditionAccount sets the "pixelballzEdition" account.
+func (inst *FlushQuestRecord) SetPixelballzEditionAccount(pixelballzEdition ag_solanago.PublicKey) *FlushQuestRecord {
+	inst.AccountMetaSlice[3] = ag_solanago.Meta(pixelballzEdition).WRITE()
+	return inst
+}
+
+// GetPixelballzEditionAccount gets the "pixelballzEdition" account.
+func (inst *FlushQuestRecord) GetPixelballzEditionAccount() *ag_solanago.AccountMeta {
+	return inst.AccountMetaSlice.Get(3)
 }
 
 // SetInitializerAccount sets the "initializer" account.
 func (inst *FlushQuestRecord) SetInitializerAccount(initializer ag_solanago.PublicKey) *FlushQuestRecord {
-	inst.AccountMetaSlice[2] = ag_solanago.Meta(initializer).WRITE().SIGNER()
+	inst.AccountMetaSlice[4] = ag_solanago.Meta(initializer).WRITE().SIGNER()
 	return inst
 }
 
 // GetInitializerAccount gets the "initializer" account.
 func (inst *FlushQuestRecord) GetInitializerAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(2)
+	return inst.AccountMetaSlice.Get(4)
 }
 
 // SetPixelballzMintAccount sets the "pixelballzMint" account.
 func (inst *FlushQuestRecord) SetPixelballzMintAccount(pixelballzMint ag_solanago.PublicKey) *FlushQuestRecord {
-	inst.AccountMetaSlice[3] = ag_solanago.Meta(pixelballzMint).WRITE()
+	inst.AccountMetaSlice[5] = ag_solanago.Meta(pixelballzMint).WRITE()
 	return inst
 }
 
 // GetPixelballzMintAccount gets the "pixelballzMint" account.
 func (inst *FlushQuestRecord) GetPixelballzMintAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(3)
+	return inst.AccountMetaSlice.Get(5)
 }
 
 // SetPixelballzTokenAccountAccount sets the "pixelballzTokenAccount" account.
 func (inst *FlushQuestRecord) SetPixelballzTokenAccountAccount(pixelballzTokenAccount ag_solanago.PublicKey) *FlushQuestRecord {
-	inst.AccountMetaSlice[4] = ag_solanago.Meta(pixelballzTokenAccount).WRITE()
+	inst.AccountMetaSlice[6] = ag_solanago.Meta(pixelballzTokenAccount).WRITE()
 	return inst
 }
 
 // GetPixelballzTokenAccountAccount gets the "pixelballzTokenAccount" account.
 func (inst *FlushQuestRecord) GetPixelballzTokenAccountAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(4)
+	return inst.AccountMetaSlice.Get(6)
 }
 
 // SetTokenProgramAccount sets the "tokenProgram" account.
 func (inst *FlushQuestRecord) SetTokenProgramAccount(tokenProgram ag_solanago.PublicKey) *FlushQuestRecord {
-	inst.AccountMetaSlice[5] = ag_solanago.Meta(tokenProgram)
+	inst.AccountMetaSlice[7] = ag_solanago.Meta(tokenProgram)
 	return inst
 }
 
 // GetTokenProgramAccount gets the "tokenProgram" account.
 func (inst *FlushQuestRecord) GetTokenProgramAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(5)
+	return inst.AccountMetaSlice.Get(7)
 }
 
 // SetSystemProgramAccount sets the "systemProgram" account.
 func (inst *FlushQuestRecord) SetSystemProgramAccount(systemProgram ag_solanago.PublicKey) *FlushQuestRecord {
-	inst.AccountMetaSlice[6] = ag_solanago.Meta(systemProgram)
+	inst.AccountMetaSlice[8] = ag_solanago.Meta(systemProgram)
 	return inst
 }
 
 // GetSystemProgramAccount gets the "systemProgram" account.
 func (inst *FlushQuestRecord) GetSystemProgramAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(6)
+	return inst.AccountMetaSlice.Get(8)
+}
+
+// SetQuestingProgramAccount sets the "questingProgram" account.
+func (inst *FlushQuestRecord) SetQuestingProgramAccount(questingProgram ag_solanago.PublicKey) *FlushQuestRecord {
+	inst.AccountMetaSlice[9] = ag_solanago.Meta(questingProgram)
+	return inst
+}
+
+// GetQuestingProgramAccount gets the "questingProgram" account.
+func (inst *FlushQuestRecord) GetQuestingProgramAccount() *ag_solanago.AccountMeta {
+	return inst.AccountMetaSlice.Get(9)
+}
+
+// SetMplMetadataProgramAccount sets the "mplMetadataProgram" account.
+func (inst *FlushQuestRecord) SetMplMetadataProgramAccount(mplMetadataProgram ag_solanago.PublicKey) *FlushQuestRecord {
+	inst.AccountMetaSlice[10] = ag_solanago.Meta(mplMetadataProgram)
+	return inst
+}
+
+// GetMplMetadataProgramAccount gets the "mplMetadataProgram" account.
+func (inst *FlushQuestRecord) GetMplMetadataProgramAccount() *ag_solanago.AccountMeta {
+	return inst.AccountMetaSlice.Get(10)
+}
+
+// SetMetadataAccountAccount sets the "metadataAccount" account.
+func (inst *FlushQuestRecord) SetMetadataAccountAccount(metadataAccount ag_solanago.PublicKey) *FlushQuestRecord {
+	inst.AccountMetaSlice[11] = ag_solanago.Meta(metadataAccount).WRITE()
+	return inst
+}
+
+// GetMetadataAccountAccount gets the "metadataAccount" account.
+func (inst *FlushQuestRecord) GetMetadataAccountAccount() *ag_solanago.AccountMeta {
+	return inst.AccountMetaSlice.Get(11)
 }
 
 func (inst FlushQuestRecord) Build() *Instruction {
@@ -161,6 +240,9 @@ func (inst *FlushQuestRecord) Validate() error {
 		if inst.QuestProposalBump == nil {
 			return errors.New("QuestProposalBump parameter is not set")
 		}
+		if inst.QuestAccBump == nil {
+			return errors.New("QuestAccBump parameter is not set")
+		}
 		if inst.QuestBump == nil {
 			return errors.New("QuestBump parameter is not set")
 		}
@@ -169,25 +251,40 @@ func (inst *FlushQuestRecord) Validate() error {
 	// Check whether all (required) accounts are set:
 	{
 		if inst.AccountMetaSlice[0] == nil {
-			return errors.New("accounts.QuestProposal is not set")
+			return errors.New("accounts.QuestAcc is not set")
 		}
 		if inst.AccountMetaSlice[1] == nil {
-			return errors.New("accounts.Quest is not set")
+			return errors.New("accounts.QuestProposal is not set")
 		}
 		if inst.AccountMetaSlice[2] == nil {
-			return errors.New("accounts.Initializer is not set")
+			return errors.New("accounts.Quest is not set")
 		}
 		if inst.AccountMetaSlice[3] == nil {
-			return errors.New("accounts.PixelballzMint is not set")
+			return errors.New("accounts.PixelballzEdition is not set")
 		}
 		if inst.AccountMetaSlice[4] == nil {
-			return errors.New("accounts.PixelballzTokenAccount is not set")
+			return errors.New("accounts.Initializer is not set")
 		}
 		if inst.AccountMetaSlice[5] == nil {
-			return errors.New("accounts.TokenProgram is not set")
+			return errors.New("accounts.PixelballzMint is not set")
 		}
 		if inst.AccountMetaSlice[6] == nil {
+			return errors.New("accounts.PixelballzTokenAccount is not set")
+		}
+		if inst.AccountMetaSlice[7] == nil {
+			return errors.New("accounts.TokenProgram is not set")
+		}
+		if inst.AccountMetaSlice[8] == nil {
 			return errors.New("accounts.SystemProgram is not set")
+		}
+		if inst.AccountMetaSlice[9] == nil {
+			return errors.New("accounts.QuestingProgram is not set")
+		}
+		if inst.AccountMetaSlice[10] == nil {
+			return errors.New("accounts.MplMetadataProgram is not set")
+		}
+		if inst.AccountMetaSlice[11] == nil {
+			return errors.New("accounts.MetadataAccount is not set")
 		}
 	}
 	return nil
@@ -202,21 +299,28 @@ func (inst *FlushQuestRecord) EncodeToTree(parent ag_treeout.Branches) {
 				ParentFunc(func(instructionBranch ag_treeout.Branches) {
 
 					// Parameters of the instruction:
-					instructionBranch.Child("Params[len=3]").ParentFunc(func(paramsBranch ag_treeout.Branches) {
+					instructionBranch.Child("Params[len=5]").ParentFunc(func(paramsBranch ag_treeout.Branches) {
 						paramsBranch.Child(ag_format.Param("QuestProposalIndex", *inst.QuestProposalIndex))
 						paramsBranch.Child(ag_format.Param(" QuestProposalBump", *inst.QuestProposalBump))
+						paramsBranch.Child(ag_format.Param("      QuestAccBump", *inst.QuestAccBump))
 						paramsBranch.Child(ag_format.Param("         QuestBump", *inst.QuestBump))
+						paramsBranch.Child(ag_format.Param("     AuthorityBump (OPT)", inst.AuthorityBump))
 					})
 
 					// Accounts of the instruction:
-					instructionBranch.Child("Accounts[len=7]").ParentFunc(func(accountsBranch ag_treeout.Branches) {
-						accountsBranch.Child(ag_format.Meta("  questProposal", inst.AccountMetaSlice.Get(0)))
-						accountsBranch.Child(ag_format.Meta("          quest", inst.AccountMetaSlice.Get(1)))
-						accountsBranch.Child(ag_format.Meta("    initializer", inst.AccountMetaSlice.Get(2)))
-						accountsBranch.Child(ag_format.Meta(" pixelballzMint", inst.AccountMetaSlice.Get(3)))
-						accountsBranch.Child(ag_format.Meta("pixelballzToken", inst.AccountMetaSlice.Get(4)))
-						accountsBranch.Child(ag_format.Meta("   tokenProgram", inst.AccountMetaSlice.Get(5)))
-						accountsBranch.Child(ag_format.Meta("  systemProgram", inst.AccountMetaSlice.Get(6)))
+					instructionBranch.Child("Accounts[len=12]").ParentFunc(func(accountsBranch ag_treeout.Branches) {
+						accountsBranch.Child(ag_format.Meta("          questAcc", inst.AccountMetaSlice.Get(0)))
+						accountsBranch.Child(ag_format.Meta("     questProposal", inst.AccountMetaSlice.Get(1)))
+						accountsBranch.Child(ag_format.Meta("             quest", inst.AccountMetaSlice.Get(2)))
+						accountsBranch.Child(ag_format.Meta(" pixelballzEdition", inst.AccountMetaSlice.Get(3)))
+						accountsBranch.Child(ag_format.Meta("       initializer", inst.AccountMetaSlice.Get(4)))
+						accountsBranch.Child(ag_format.Meta("    pixelballzMint", inst.AccountMetaSlice.Get(5)))
+						accountsBranch.Child(ag_format.Meta("   pixelballzToken", inst.AccountMetaSlice.Get(6)))
+						accountsBranch.Child(ag_format.Meta("      tokenProgram", inst.AccountMetaSlice.Get(7)))
+						accountsBranch.Child(ag_format.Meta("     systemProgram", inst.AccountMetaSlice.Get(8)))
+						accountsBranch.Child(ag_format.Meta("   questingProgram", inst.AccountMetaSlice.Get(9)))
+						accountsBranch.Child(ag_format.Meta("mplMetadataProgram", inst.AccountMetaSlice.Get(10)))
+						accountsBranch.Child(ag_format.Meta("          metadata", inst.AccountMetaSlice.Get(11)))
 					})
 				})
 		})
@@ -233,10 +337,33 @@ func (obj FlushQuestRecord) MarshalWithEncoder(encoder *ag_binary.Encoder) (err 
 	if err != nil {
 		return err
 	}
+	// Serialize `QuestAccBump` param:
+	err = encoder.Encode(obj.QuestAccBump)
+	if err != nil {
+		return err
+	}
 	// Serialize `QuestBump` param:
 	err = encoder.Encode(obj.QuestBump)
 	if err != nil {
 		return err
+	}
+	// Serialize `AuthorityBump` param (optional):
+	{
+		if obj.AuthorityBump == nil {
+			err = encoder.WriteBool(false)
+			if err != nil {
+				return err
+			}
+		} else {
+			err = encoder.WriteBool(true)
+			if err != nil {
+				return err
+			}
+			err = encoder.Encode(obj.AuthorityBump)
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
@@ -251,10 +378,28 @@ func (obj *FlushQuestRecord) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (e
 	if err != nil {
 		return err
 	}
+	// Deserialize `QuestAccBump`:
+	err = decoder.Decode(&obj.QuestAccBump)
+	if err != nil {
+		return err
+	}
 	// Deserialize `QuestBump`:
 	err = decoder.Decode(&obj.QuestBump)
 	if err != nil {
 		return err
+	}
+	// Deserialize `AuthorityBump` (optional):
+	{
+		ok, err := decoder.ReadBool()
+		if err != nil {
+			return err
+		}
+		if ok {
+			err = decoder.Decode(&obj.AuthorityBump)
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
@@ -264,24 +409,38 @@ func NewFlushQuestRecordInstruction(
 	// Parameters:
 	questProposalIndex uint64,
 	questProposalBump uint8,
+	questAccBump uint8,
 	questBump uint8,
+	authorityBump uint8,
 	// Accounts:
+	questAcc ag_solanago.PublicKey,
 	questProposal ag_solanago.PublicKey,
 	quest ag_solanago.PublicKey,
+	pixelballzEdition ag_solanago.PublicKey,
 	initializer ag_solanago.PublicKey,
 	pixelballzMint ag_solanago.PublicKey,
 	pixelballzTokenAccount ag_solanago.PublicKey,
 	tokenProgram ag_solanago.PublicKey,
-	systemProgram ag_solanago.PublicKey) *FlushQuestRecord {
+	systemProgram ag_solanago.PublicKey,
+	questingProgram ag_solanago.PublicKey,
+	mplMetadataProgram ag_solanago.PublicKey,
+	metadataAccount ag_solanago.PublicKey) *FlushQuestRecord {
 	return NewFlushQuestRecordInstructionBuilder().
 		SetQuestProposalIndex(questProposalIndex).
 		SetQuestProposalBump(questProposalBump).
+		SetQuestAccBump(questAccBump).
 		SetQuestBump(questBump).
+		SetAuthorityBump(authorityBump).
+		SetQuestAccAccount(questAcc).
 		SetQuestProposalAccount(questProposal).
 		SetQuestAccount(quest).
+		SetPixelballzEditionAccount(pixelballzEdition).
 		SetInitializerAccount(initializer).
 		SetPixelballzMintAccount(pixelballzMint).
 		SetPixelballzTokenAccountAccount(pixelballzTokenAccount).
 		SetTokenProgramAccount(tokenProgram).
-		SetSystemProgramAccount(systemProgram)
+		SetSystemProgramAccount(systemProgram).
+		SetQuestingProgramAccount(questingProgram).
+		SetMplMetadataProgramAccount(mplMetadataProgram).
+		SetMetadataAccountAccount(metadataAccount)
 }

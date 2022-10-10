@@ -42,6 +42,7 @@ pub struct Quest {
     pub xp: u64,
     pub staking_config: Option<StakingConfig>,
     pub pairs_config: Option<PairsConfig>,
+    pub milestones: Option<Vec<Milestone>>,
 }
 
 impl Quest {

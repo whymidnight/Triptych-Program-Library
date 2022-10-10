@@ -1,0 +1,42 @@
+use anchor_lang::prelude::*;
+use ix_accounts::*;
+use std::result::Result;
+
+declare_id!("5o47FcdnHCdmtwUmKtfaLMuRb5i6eU6wuvRecDCP3E2Q");
+
+mod constants;
+mod ix_accounts;
+pub mod state;
+
+#[program]
+pub mod nexus {
+
+    use super::*;
+
+    pub fn onboard_nex(ctx: Context<OnboardNex>, moniker_name: String) -> Result<(), Error> {
+        let nex = &mut ctx.accounts.nex;
+        let moniker = &mut ctx.accounts.moniker;
+
+        nex.nextumer = ctx.accounts.nextumer.key();
+        nex.moniker = moniker.key();
+
+        moniker.nex = nex.key();
+        moniker.name = moniker_name;
+
+        Ok(())
+    }
+
+    pub fn update_nex(
+        ctx: Context<RegisterMoniker>,
+        _nex_bump: u8,
+        moniker_name: String,
+    ) -> Result<(), Error> {
+        let moniker = &mut ctx.accounts.moniker;
+        let nex = &ctx.accounts.nex;
+
+        moniker.nex = nex.key();
+        moniker.name = moniker_name;
+
+        Ok(())
+    }
+}

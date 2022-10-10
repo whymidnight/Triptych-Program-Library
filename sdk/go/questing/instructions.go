@@ -38,6 +38,8 @@ var (
 
 	Instruction_CreateQuest = ag_binary.TypeID([8]byte{112, 49, 32, 224, 255, 173, 5, 7})
 
+	Instruction_UpdateQuest = ag_binary.TypeID([8]byte{44, 253, 39, 42, 198, 233, 31, 170})
+
 	Instruction_RegisterQuestRecorder = ag_binary.TypeID([8]byte{36, 37, 125, 174, 126, 63, 111, 139})
 
 	Instruction_ProposeQuestRecord = ag_binary.TypeID([8]byte{98, 126, 107, 108, 170, 184, 73, 209})
@@ -66,6 +68,8 @@ func InstructionIDToName(id ag_binary.TypeID) string {
 		return "RegisterQuestReward"
 	case Instruction_CreateQuest:
 		return "CreateQuest"
+	case Instruction_UpdateQuest:
+		return "UpdateQuest"
 	case Instruction_RegisterQuestRecorder:
 		return "RegisterQuestRecorder"
 	case Instruction_ProposeQuestRecord:
@@ -114,6 +118,9 @@ var InstructionImplDef = ag_binary.NewVariantDefinition(
 		},
 		{
 			"create_quest", (*CreateQuest)(nil),
+		},
+		{
+			"update_quest", (*UpdateQuest)(nil),
 		},
 		{
 			"register_quest_recorder", (*RegisterQuestRecorder)(nil),

@@ -4,6 +4,7 @@ import (
 	"syscall/js"
 
 	"github.com/gagliardetto/solana-go"
+	assets_program "triptych.labs/assets"
 	questing_program "triptych.labs/questing"
 	"triptych.labs/wasm/v2/integrations/questing"
 )
@@ -11,7 +12,8 @@ import (
 func main() {
 	global := js.Global()
 	done := make(chan struct{})
-	questing_program.SetProgramID(solana.MustPublicKeyFromBase58("9iMuz8Lf27R9Y2jQhWM1wrSVtPB4Tt5wqkh1opjMTK11"))
+	questing_program.SetProgramID(solana.MustPublicKeyFromBase58("CU9VZcEMUNgQ2iQZQE5o5T1ixzDP9wwnwrmWoQpc5c6S"))
+	assets_program.SetProgramID(solana.MustPublicKeyFromBase58("4EoHpMmNr29LBgjcgoxbeAWgXhudBts62wSRAckWVuPd"))
 
 	getQuests := js.FuncOf(questing.GetQuests)
 	defer getQuests.Release()
@@ -52,6 +54,18 @@ func main() {
 	endQuests := js.FuncOf(questing.EndQuests)
 	defer endQuests.Release()
 	global.Set("end_quests", endQuests)
+
+	addStakingToken := js.FuncOf(questing.AddStakingToken)
+	defer addStakingToken.Release()
+	global.Set("add_staking_token", addStakingToken)
+
+	updateQuest := js.FuncOf(questing.UpdateQuest)
+	defer updateQuest.Release()
+	global.Set("update_quest", updateQuest)
+
+	createQuest := js.FuncOf(questing.CreateQuest)
+	defer createQuest.Release()
+	global.Set("create_quest", createQuest)
 
 	<-done
 }

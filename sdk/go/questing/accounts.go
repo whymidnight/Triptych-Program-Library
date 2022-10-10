@@ -216,6 +216,7 @@ type Quest struct {
 	Xp              uint64
 	StakingConfig   *StakingConfig `bin:"optional"`
 	PairsConfig     *PairsConfig   `bin:"optional"`
+	Milestones      *[]Milestone   `bin:"optional"`
 }
 
 var QuestDiscriminator = [8]byte{68, 78, 51, 23, 204, 27, 76, 132}
@@ -348,6 +349,24 @@ func (obj Quest) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
 			}
 		}
 	}
+	// Serialize `Milestones` param (optional):
+	{
+		if obj.Milestones == nil {
+			err = encoder.WriteBool(false)
+			if err != nil {
+				return err
+			}
+		} else {
+			err = encoder.WriteBool(true)
+			if err != nil {
+				return err
+			}
+			err = encoder.Encode(obj.Milestones)
+			if err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 
@@ -462,6 +481,19 @@ func (obj *Quest) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
 		}
 		if ok {
 			err = decoder.Decode(&obj.PairsConfig)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	// Deserialize `Milestones` (optional):
+	{
+		ok, err := decoder.ReadBool()
+		if err != nil {
+			return err
+		}
+		if ok {
+			err = decoder.Decode(&obj.Milestones)
 			if err != nil {
 				return err
 			}

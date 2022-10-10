@@ -1,0 +1,71 @@
+package main
+
+import (
+	"context"
+	"os"
+
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
+
+	"triptych.labs/nexus"
+	"triptych.labs/nexus/nex/ops"
+	"triptych.labs/utils"
+)
+
+func init() {
+	nexus.SetProgramID(solana.MustPublicKeyFromBase58("5o47FcdnHCdmtwUmKtfaLMuRb5i6eU6wuvRecDCP3E2Q"))
+}
+
+func main() {
+	op := os.Args[1]
+	switch op {
+	case "fuzz":
+		{
+			Fuzz()
+		}
+	case "report":
+		{
+			Report()
+		}
+	}
+}
+
+func Fuzz() {
+	accounts := []solana.PrivateKey{
+		solana.NewWallet().PrivateKey,
+		solana.NewWallet().PrivateKey,
+		solana.NewWallet().PrivateKey,
+	}
+
+	client := rpc.New(utils.NETWORK)
+
+	for _, wallet := range accounts {
+		go func(_wallet solana.PrivateKey) {
+			instructions := make([]solana.Instruction, 0)
+
+			_, err := client.RequestAirdrop(
+				context.TODO(),
+				_wallet.PublicKey(),
+				solana.LAMPORTS_PER_SOL*2,
+				rpc.CommitmentFinalized,
+			)
+			if err != nil {
+				panic(err)
+			}
+
+			instructions = append(instructions, ops.OnboardNex(_wallet.PublicKey()))
+
+			utils.SendTx(
+				"create",
+				instructions,
+				append(make([]solana.PrivateKey, 0), _wallet),
+				_wallet.PublicKey(),
+			)
+		}(wallet)
+	}
+}
+
+func Report() {
+	// rpcClient := rpc.New(utils.NETWORK)
+}
+

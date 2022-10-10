@@ -2,7 +2,9 @@ package integrations
 
 import (
 	"fmt"
+	"log"
 	"math"
+	"time"
 
 	"triptych.labs/questing"
 	"triptych.labs/questing/quests"
@@ -14,14 +16,17 @@ import (
 )
 
 type StakingQuestScope struct {
-	name          string
-	duration      int
-	left          int
-	right         int
-	leftCreators  [5]solana.PublicKey
-	rightCreators [5]solana.PublicKey
-	yieldPer      int
-	yieldPerTime  int
+	name               string
+	duration           int
+	left               int
+	right              int
+	leftCreators       [5]solana.PublicKey
+	rightCreators      [5]solana.PublicKey
+	yieldPer           int
+	yieldPerTime       int
+	stakingTokenName   string
+	stakingTokenSymbol string
+	milestones         *[]questing.Milestone
 }
 
 type RewardQuestScope struct {
@@ -37,63 +42,101 @@ type RewardQuestScope struct {
 }
 
 var GEN1 = [5]solana.PublicKey{
-	solana.MustPublicKeyFromBase58("3riM3gFAvvGVWfLkbDT8CMrcnewqfmRiHYFUko2Gd4DB"),
-	solana.MustPublicKeyFromBase58("3riM3gFAvvGVWfLkbDT8CMrcnewqfmRiHYFUko2Gd4DB"),
-	solana.MustPublicKeyFromBase58("3riM3gFAvvGVWfLkbDT8CMrcnewqfmRiHYFUko2Gd4DB"),
-	solana.MustPublicKeyFromBase58("3riM3gFAvvGVWfLkbDT8CMrcnewqfmRiHYFUko2Gd4DB"),
-	solana.MustPublicKeyFromBase58("3riM3gFAvvGVWfLkbDT8CMrcnewqfmRiHYFUko2Gd4DB"),
+	solana.MustPublicKeyFromBase58("E835GdtAHygnkynfwQkmxPrhfxYfsVi6Kfr7gFx6NmkT"),
+	solana.MustPublicKeyFromBase58("E835GdtAHygnkynfwQkmxPrhfxYfsVi6Kfr7gFx6NmkT"),
+	solana.MustPublicKeyFromBase58("E835GdtAHygnkynfwQkmxPrhfxYfsVi6Kfr7gFx6NmkT"),
+	solana.MustPublicKeyFromBase58("E835GdtAHygnkynfwQkmxPrhfxYfsVi6Kfr7gFx6NmkT"),
+	solana.MustPublicKeyFromBase58("E835GdtAHygnkynfwQkmxPrhfxYfsVi6Kfr7gFx6NmkT"),
 }
 
 var GEN2 = [5]solana.PublicKey{
-	solana.MustPublicKeyFromBase58("6oVAspyLfV7iWYivvHokcXg9X5LcCLcWvsa7XL1rbEM8"),
-	solana.MustPublicKeyFromBase58("6oVAspyLfV7iWYivvHokcXg9X5LcCLcWvsa7XL1rbEM8"),
-	solana.MustPublicKeyFromBase58("6oVAspyLfV7iWYivvHokcXg9X5LcCLcWvsa7XL1rbEM8"),
-	solana.MustPublicKeyFromBase58("6oVAspyLfV7iWYivvHokcXg9X5LcCLcWvsa7XL1rbEM8"),
-	solana.MustPublicKeyFromBase58("6oVAspyLfV7iWYivvHokcXg9X5LcCLcWvsa7XL1rbEM8"),
+	solana.MustPublicKeyFromBase58("E835GdtAHygnkynfwQkmxPrhfxYfsVi6Kfr7gFx6NmkT"),
+	solana.MustPublicKeyFromBase58("E835GdtAHygnkynfwQkmxPrhfxYfsVi6Kfr7gFx6NmkT"),
+	solana.MustPublicKeyFromBase58("E835GdtAHygnkynfwQkmxPrhfxYfsVi6Kfr7gFx6NmkT"),
+	solana.MustPublicKeyFromBase58("E835GdtAHygnkynfwQkmxPrhfxYfsVi6Kfr7gFx6NmkT"),
+	solana.MustPublicKeyFromBase58("E835GdtAHygnkynfwQkmxPrhfxYfsVi6Kfr7gFx6NmkT"),
 }
 
 func CreateNStakingQuests() {
 
 	scopes := []StakingQuestScope{
 		{
-			name:          "Gen1",
-			duration:      0,
-			left:          1,
-			right:         0,
-			leftCreators:  GEN1,
-			rightCreators: GEN2,
-			yieldPer:      50,
-			yieldPerTime:  10,
+			name:               "Pool Zero",
+			duration:           0,
+			left:               1,
+			right:              0,
+			leftCreators:       GEN1,
+			rightCreators:      GEN2,
+			yieldPer:           50,
+			yieldPerTime:       10,
+			stakingTokenName:   "P0",
+			stakingTokenSymbol: "qstPZero",
+			milestones: &[]questing.Milestone{
+				{
+					Tick:     2,
+					Modifier: 5,
+				},
+				{
+					Tick:     4,
+					Modifier: 10,
+				},
+				{
+					Tick:     8,
+					Modifier: 5,
+				},
+			},
 		},
 		{
-			name:          "Gen2",
-			duration:      0,
-			left:          0,
-			right:         1,
-			leftCreators:  GEN1,
-			rightCreators: GEN2,
-			yieldPer:      50,
-			yieldPerTime:  10,
+			name:               "Marine Cats",
+			duration:           0,
+			left:               2,
+			right:              0,
+			leftCreators:       GEN1,
+			rightCreators:      GEN2,
+			yieldPer:           50,
+			yieldPerTime:       10,
+			stakingTokenName:   "Sea Weeds",
+			stakingTokenSymbol: "qstSWEED",
+			milestones: &[]questing.Milestone{
+				{
+					Tick:     2,
+					Modifier: 5,
+				},
+				{
+					Tick:     4,
+					Modifier: 10,
+				},
+				{
+					Tick:     8,
+					Modifier: 5,
+				},
+			},
 		},
 		{
-			name:          "Gen1+Gen2 Duo",
-			duration:      0,
-			left:          1,
-			right:         1,
-			leftCreators:  GEN1,
-			rightCreators: GEN2,
-			yieldPer:      150,
-			yieldPerTime:  10,
-		},
-		{
-			name:          "Gen1+Gen2 Quatro",
-			duration:      0,
-			left:          2,
-			right:         2,
-			leftCreators:  GEN1,
-			rightCreators: GEN2,
-			yieldPer:      350,
-			yieldPerTime:  10,
+			name:               "Talking Trees",
+			duration:           0,
+			left:               4,
+			right:              0,
+			leftCreators:       GEN1,
+			rightCreators:      GEN2,
+			yieldPer:           150,
+			yieldPerTime:       10,
+			stakingTokenName:   "WOOD",
+			stakingTokenSymbol: "qstWOOD",
+			milestones: &[]questing.Milestone{
+				{
+					Tick:     2,
+					Modifier: 5,
+				},
+				{
+					Tick:     4,
+					Modifier: 10,
+				},
+				{
+					Tick:     8,
+					Modifier: 5,
+				},
+			},
 		},
 	}
 
@@ -108,7 +151,7 @@ func CreateNRewardQuests() {
 	}
 
 	ixs := make([]solana.Instruction, 0)
-	questRewardIx, questRewardMint := quest_ops.RegisterQuestsStakingReward(oracle.PublicKey(), "qstNBA WL", "qstNBAWL")
+	questRewardIx, questRewardMint := quest_ops.RegisterQuestsStakingReward(oracle.PublicKey(), "qstNBA WL", "qstNBAWL", "")
 	ixs = append(ixs, questRewardIx)
 
 	utils.SendTx(
@@ -193,16 +236,31 @@ func createNStakingQuests(scopes []StakingQuestScope) {
 		panic(err)
 	}
 
+	stakingMints := make([]solana.PrivateKey, 0)
+
 	ixs := make([]solana.Instruction, 0)
-	stakingRewardIx, stakingMint := quest_ops.RegisterQuestsStakingReward(oracle.PublicKey(), "qstCoin", "QSTC")
-	ixs = append(ixs, stakingRewardIx)
+
+	for _, scope := range scopes {
+		stakingRewardIx, stakingMint := quest_ops.RegisterQuestsStakingReward(oracle.PublicKey(), scope.stakingTokenName, scope.stakingTokenSymbol, "")
+		ixs = append(ixs, stakingRewardIx)
+		stakingMints = append(stakingMints, stakingMint)
+	}
+
+	signers := make([]solana.PrivateKey, 0)
+	signers = append(signers, oracle)
+	for _, stakingMint := range stakingMints {
+		signers = append(signers, stakingMint)
+	}
 
 	utils.SendTx(
 		"list",
 		ixs,
-		append(make([]solana.PrivateKey, 0), oracle, stakingMint),
+		signers,
 		oracle.PublicKey(),
 	)
+
+	log.Println("sleeping...")
+	time.Sleep(5 * time.Second)
 
 	questsPda, _ := quests.GetQuests(oracle.PublicKey())
 	questsData := quests.GetQuestsData(rpcClient, questsPda)
@@ -218,7 +276,7 @@ func createNStakingQuests(scopes []StakingQuestScope) {
 			TenderSplits:    nil,
 			Rewards:         []questing.Reward{},
 			StakingConfig: &questing.StakingConfig{
-				MintAddress:  stakingMint.PublicKey(),
+				MintAddress:  stakingMints[i].PublicKey(),
 				YieldPer:     uint64(scope.yieldPer),     // 10 secounds
 				YieldPerTime: uint64(scope.yieldPerTime), // 5 tokens
 			},
@@ -228,9 +286,10 @@ func createNStakingQuests(scopes []StakingQuestScope) {
 				Right:         uint8(scope.right),
 				RightCreators: scope.rightCreators,
 			},
+			Milestones: scope.milestones,
 		}
 
-		creationIx, _ := quest_ops.CreateQuest(rpcClient, oracle.PublicKey(), questData)
+		creationIx, _ := quest_ops.CreateQuest(rpcClient, oracle.PublicKey(), questData, true)
 		questIxs = append(questIxs, creationIx)
 
 		utils.SendTx(

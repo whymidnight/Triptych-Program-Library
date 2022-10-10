@@ -259,3 +259,36 @@ func (obj *Split) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
 	}
 	return nil
 }
+
+type Milestone struct {
+	Tick     uint8
+	Modifier uint32
+}
+
+func (obj Milestone) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
+	// Serialize `Tick` param:
+	err = encoder.Encode(obj.Tick)
+	if err != nil {
+		return err
+	}
+	// Serialize `Modifier` param:
+	err = encoder.Encode(obj.Modifier)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (obj *Milestone) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
+	// Deserialize `Tick`:
+	err = decoder.Decode(&obj.Tick)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Modifier`:
+	err = decoder.Decode(&obj.Modifier)
+	if err != nil {
+		return err
+	}
+	return nil
+}

@@ -11,6 +11,7 @@ pub struct PairsConfig {
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct StakingConfig {
     pub mint_address: Pubkey,
+    // `yield_per` needs to account `decimals: 1`.
     pub yield_per: u64,
     pub yield_per_time: u64,
 }
@@ -37,4 +38,10 @@ pub struct Split {
     pub token_address: Pubkey,
     pub op_code: u8, // 0 - burn, 1 - transfer to `token_address`
     pub share: u8,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct Milestone {
+    pub tick: u8,
+    pub modifier: u32,
 }

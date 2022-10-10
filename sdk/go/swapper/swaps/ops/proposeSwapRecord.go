@@ -11,9 +11,15 @@ import (
 
 func ProposeSwapRecord(rpcClient *rpc.Client, oracle, fromMint, toMint solana.PublicKey, per, exch uint64) solana.Instruction {
 	swapRecorder, _ := swaps.GetSwapRecorder(oracle)
-	swapRecorderData := swaps.GetSwapRecorderData(rpcClient, swapRecorder)
 
-	swapPda, _ := swaps.GetSwap(oracle, swapRecorderData.Proposals)
+	var swapProposalIndex = uint64(0)
+
+	swapRecorderData := swaps.GetSwapRecorderData(rpcClient, swapRecorder)
+	if swapRecorderData != nil {
+		swapProposalIndex = swapRecorderData.Proposals
+	}
+
+	swapPda, _ := swaps.GetSwap(oracle, swapProposalIndex)
 	swapPool, _ := swaps.GetSwapPool(toMint, swapRecorder)
 
 	proposalIx := swapper.NewProposeSwapRecordInstructionBuilder().

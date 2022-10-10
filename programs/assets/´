@@ -1,0 +1,80 @@
+use anchor_lang::prelude::*;
+use errors::FlipError;
+use ix_accounts::*;
+use std::result::Result;
+
+declare_id!("4EoHpMmNr29LBgjcgoxbeAWgXhudBts62wSRAckWVuPd");
+
+pub mod constants;
+mod errors;
+mod ix_accounts;
+pub mod state;
+pub mod structs;
+
+#[program]
+pub mod assets {
+    use solana_program::{program::invoke, system_instruction::transfer};
+
+    use crate::constants::AUTHORIZED_PROGRAMS;
+
+    use super::*;
+
+    pub fn initialize_authority(ctx: Context<InitializeAuthority>) -> Result<(), Error> {
+        let authority = &mut ctx.accounts.authority;
+        authority.original_authority = ctx.accounts.initializer.key();
+
+        Ok(())
+    }
+
+    pub fn posses_update_authority(
+        ctx: Context<PossesUpdateAuthority>,
+        _escrow_bump: u8,
+        amount: u64,
+    ) -> Result<(), Error> {
+        let initializer = &mut ctx.accounts.initializer;
+        let escrow = &mut ctx.accounts.escrow;
+
+        mpl_token_metadata::instruction::update_metadata_accounts_v2(
+            program_id,
+            metadata_accountm,
+            update_authority,
+            new_update_authority,
+            data,
+            primary_sale_happened,
+            is_mutable,
+        );
+
+        Ok(())
+    }
+
+    pub fn invoke_royalty_change(
+        ctx: Context<InvokeRoyaltyChange>,
+        _escrow_bump: u8,
+        amount: u16,
+    ) -> Result<(), Error> {
+        let initializer = &mut ctx.accounts.initializer;
+        let authority = &mut ctx.accounts.authority;
+        let caller_program = &mut ctx.accounts.caller_program;
+
+        let caller_program_id = caller_program.key().to_string();
+
+        let is_trusted_program = AUTHORIZED_PROGRAMS
+            .iter()
+            .any(|&authorized_program| authorized_program == caller_program_id.as_str());
+
+        if !is_trusted_program {
+            if caller_program_id.as_str() != "11111111111111111111111111111111" {
+                return Err(FlipError::SuspiciousTransaction.into());
+            }
+            // if caller program id is system program id
+            // assert initializer == authority.original_authority
+
+            if authority.original_authority.key() != initializer.key() {
+                return Err(FlipError::SuspiciousTransaction.into());
+            }
+        }
+
+        Ok(())
+    }
+}
+
